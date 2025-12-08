@@ -59,7 +59,6 @@ $(function () {
 
     $("#btn_clear").click(function (e) {
         e.preventDefault();
-
         clear();
         queryBook();
     });
@@ -258,32 +257,63 @@ function updateBook(bookId){
  /**
   * 查詢
   */
-function queryBook(){
-    
+ function queryBook(){
     var grid=getBooGrid();
 
-    var bookClassId=$("#book_class_q").data("kendoDropDownList").value() ?? "";
-
+    var bookName = $("#book_name_q").val() || "";
+    var bookClassId = $("#book_class_q").data("kendoDropDownList").value() || "";
+    var bookKeeperId = $("#book_keeper_q").data("kendoDropDownList").value() || "";
+    var bookStatusId = $("#book_status_q").data("kendoDropDownList").value() || "";
 
     var filtersCondition=[];
+  
+    if(bookName!=""){
+        filtersCondition.push({ field: "BookName", operator: "contains", value: bookName });
+    }
+  
     if(bookClassId!=""){
-        filtersCondition.push({ field: "BookClassId", operator: "contains", value: bookClassId });
+        filtersCondition.push({ field: "BookClassId", operator: "eq", value: bookClassId });
+    }
+  
+    if(bookKeeperId!=""){
+        filtersCondition.push({ field: "BookKeeperId", operator: "eq", value: bookKeeperId });
+    }
+  
+    if(bookStatusId!=""){
+        filtersCondition.push({ field: "BookStatusId", operator: "eq", value: bookStatusId });
     }
 
-    grid.dataSource.filter({
-        logic: "and",
-        filters:filtersCondition
-    });
+    if(filtersCondition.length > 0){
+        grid.dataSource.filter({
+            logic: "and",
+            filters: filtersCondition
+        });
+    } else {
+        grid.dataSource.filter({});
+    }
 }
 
 function deleteBook(e) {
-    
-    var grid = $("#book_grid").data("kendoGrid");    
+    var grid = $("#book_grid").data("kendoGrid");  
     var row = grid.dataItem(e.target.closest("tr"));
-
-    grid.dataSource.remove(row);    
+  
+    // 檢查是否已借出（狀態為 "B" 或 "C"）
+    if(row.BookStatusId == "B" || row.BookStatusId == "C"){
+        alert("無法刪除已借出的書籍");
+        return;
+    }
+  
+    var index = bookDataFromLocalStorage.findIndex(m => m.BookId == row.BookId);
+    if(index > -1){
+        bookDataFromLocalStorage.splice(index, 1);
+    }
+  
+    localStorage.setItem("bookData", JSON.stringify(bookDataFromLocalStorage));
+  
+    grid.dataSource.data(bookDataFromLocalStorage);
+    grid.refresh();
+  
     alert("刪除成功");
-
 }
 
 
@@ -349,9 +379,33 @@ function showBookLendRecord(e) {
  * @param {*} area 
  */
 function clear(area) {
-    //TODO: 請補齊未完成的功能
+    // 清空查詢條件
     $("#book_name_q").val("");
-
+    $("#book_class_q").data("kendoDropDownList").value("");
+    $("#book_keeper_q").data("kendoDropDownList").value("");
+    $("#book_status_q").data("kendoDropDownList").value("");
+  
+    // 清空詳細資料表單
+    $("#book_id_d").val("");
+    $("#book_name_d").val("");
+    $("#book_author_d").val("");
+    $("#book_publisher_d").val("");
+    $("#book_note_d").val("");
+    $("#book_class_d").data("kendoDropDownList").value("");
+    $("#book_bought_date_d").data("kendoDatePicker").value(new Date());
+    $("#book_status_d").data("kendoDropDownList").value("");
+    $("#book_keeper_d").data("kendoDropDownList").value("");
+    $("#book_image_d").attr("src", "image/optional.jpg");
+  
+    // 啟用所有欄位
+    $("#book_class_d").data("kendoDropDownList").enable(true);
+    $("#book_name_d").prop("disabled", false);
+    $("#book_author_d").prop("disabled", false);
+    $("#book_publisher_d").prop("disabled", false);
+    $("#book_bought_date_d").data("kendoDatePicker").enable(true);
+    $("#book_status_d").data("kendoDropDownList").enable(true);
+    $("#book_keeper_d").data("kendoDropDownList").enable(true);
+    $("#book_note_d").prop("disabled", false);
 }
 
 /**
