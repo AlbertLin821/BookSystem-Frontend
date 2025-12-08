@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/kendo.common-material.min.css">
+    <link rel="stylesheet" href="./css/kendo.material-main.min.css">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .required:before {
+          content:" *";
+          color: red;
+        }
+      </style>
+      
+    <title>圖書館</title>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-nav">
+            <h1 class="navbar-title">圖書管理系統</h1>
+        </nav>
+    </header>
+    <main class="container">
+        <div class="accordion" id="accordionExample" style="margin-bottom: 10px;">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#book_filter_area" aria-expanded="false" aria-controls="collapseOne">
+                  查詢
+                </button>
+              </h2>
+              <div id="book_filter_area" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    
+                        <div class="row g-3" style="box-sizing: border-box;">
+                            <div class="col-3" style="box-sizing: border-box; ;">
+                                <label>書名</label>
+                                <input id="book_name_q" type="text" class="k-textbox" style="width: 100%;" />
+                            </div>
+        
+                            <div class="col-3" style="box-sizing: border-box; ;">
+                                <label>圖書類別</label>
+                                <select id="book_class_q" style="width: 100%;">
+                                </select>
+                            </div>
+                            <div class="col-3" style="box-sizing: border-box; ;">
+                                <label>借閱人</label>
+                                
+                                <select id="book_keeper_q" style="width: 100%;">
+                                </select>
+                            </div>
+                            <div class="col-3" style="box-sizing: border-box; ;">
+                                <label>借閱狀態</label>
+                                <select id="book_status_q" style="width: 100%;">
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin: 5px;text-align: right;">
+                            <button id="btn_query" class="k-button">查詢</button>
+                            <button id="btn_clear" class="k-button">清除</button>
+                            <button id="btn_add_book" class="k-button k-primary">新增</button>
+                        </div>
+                    
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        <div id="book_detail_area" style="display:none ;" class="container-fluid">
+
+            <div class="row g-3" style="box-sizing: border-box;">
+
+                <div class="col-4" style="box-sizing: border-box; ;">
+                    <input type="hidden" id="book_id_d">
+                    <div class="col">
+                        <label class="required">圖書類別</label>
+                        <select id="book_class_d" name="book_class_d" style="width: 100%;" 
+                            required validationMessage="圖書類別不可空白">
+                        </select>
+                    </div>
+
+                    <div class="col">
+                        <br>
+                        <img id="book_image_d" class="book-image" src="image/optional.jpg"  alt=""
+                            style="width:80%;height:100%;">
+                    </div>
+
+                </div>
+
+
+                <div class="col-4" style="box-sizing: border-box; ;">
+
+                    <div class="col">
+                        <label class="required">書名</label>
+                        <input id="book_name_d" name="book_name_d" type="text" class="k-textbox" style="width: 100%;" 
+                            required validationMessage="書名不可空白"/>
+                    </div>
+
+                    <div class="col">
+                        <label class="required">購買日期</label>
+                        <input id="book_bought_date_d" name="book_bought_date_d" class="date_picker"
+                            value="10/10/2011" title="datepicker" style="width: 100%" 
+                            data-message_prefix="購買日期"/>
+                    </div>
+
+
+                    <div class="col" id="book_status_d_col">
+                        <label class="required">借閱狀態</label>
+                        <select id="book_status_d" name="book_status_d" style="width: 100%;"
+                            required validationMessage="借閱狀態不可空白">
+                        </select>                        
+                    </div>
+
+                    <div class="col" id="book_keeper_d_col">
+                        <label id="book_keeper_d_label" class="required">借閱人</label>
+                        <select id="book_keeper_d" name="book_keeper_d" style="width: 100%;"
+                            required validationMessage="借閱人不可空白">
+                        </select>
+                    </div>
+
+
+                </div>
+                <div class="col-4" style="box-sizing: border-box; ;">
+                    <div class="col">
+                        <label class="required">作者</label>
+                        <input id="book_author_d" name="book_author_d" type="text" class="k-textbox" style="width: 100%;" 
+                            required validationMessage="作者不可空白" />
+                    </div>
+
+                    <div class="col">
+                        <label class="required">出版商</label>
+                        <input id="book_publisher_d" name="book_publisher_d" type="text" class="k-textbox" style="width: 100%;" 
+                            required validationMessage="出版商不可空白"/>
+                        </select>
+                    </div>
+
+
+                    <div class="col">
+                        <label class="required">內容簡介</label>
+                        <textarea id="book_note_d" class="k-textarea" rows="3" style="width: 100%;background-color: white;"
+                            required validationMessage="內容簡介不可空白"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 pt-3" style="box-sizing: border-box; ;">
+                <div class="col-10" style="box-sizing: border-box; text-align: right;">
+                    <button id="btn-save" class="k-button k-primary btn-add-book">存檔</button>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <div id="book_grid">
+        </div>
+
+        <div id="book_record_area" style="display: none;">
+            <div id="book_record_grid">
+            </div>
+        </div>
+    </main>
+
+    <footer>
+    </footer>
+</body>
+<script type="text/javascript" src="data/book-data.js"></script>
+<script type="text/javascript" src="data/book-lend-record.js"></script>
+<script type="text/javascript" src="data/code-data.js"></script>
+
+<script src="./js/jquery.min.js"></script>
+<script src="./js/kendo.all.min.js"></script>
+<!-- <script src="./js/uikit.min.js"></script> -->
+<script src="./js/bootstrap.min.js"></script>
+<script src="./js/script.js"></script>
+
+</html>
