@@ -67,7 +67,7 @@ $(function () {
     $("#btn-save").click(function (e) {
         e.preventDefault();
         
-        //TODO : 存檔前請作必填的檢查
+        //TODO: 存檔前請作必填的檢查
         //低消：使用 if else ==>alert 提示訊息檢查
         //優  : 使用 kendo validator 檢查
         switch (state) {
@@ -173,7 +173,7 @@ function loadBookData() {
 }
 
 function onChange() {
-    //TODO : 請完成遺漏的邏輯
+    //TODO: 請完成遺漏的邏輯
     if(selectedValue===""){
         $("#book_image_d").attr("src", "image/optional.jpg");
     }else{
@@ -187,7 +187,7 @@ function onChange() {
  */
 function addBook() { 
 
-    //TODO：請完成新增書籍的相關功能
+    //TODO:請完成新增書籍的相關功能
     var grid=$("#book_grid").data("kendoGrid");
     var book = {
         "BookId": 0,
@@ -215,7 +215,7 @@ function addBook() {
   */
 function updateBook(bookId){
     
-    //TODO：請完成更新書籍的相關功能
+    //TODO:請完成更新書籍的相關功能
     var book=bookDataFromLocalStorage.find(m=>m.BookId==bookId)
 
     book.BookName=$("#book_name_d").val();
@@ -252,7 +252,7 @@ function updateBook(bookId){
 
  /**新增借閱紀錄 */
  function addBookLendRecord() {  
-    //TODO：請完成新增借閱紀錄相關功能
+    //TODO:請完成新增借閱紀錄相關功能
  }
 
  /**
@@ -314,7 +314,7 @@ function showBookForUpdate(e) {
  */
 function showBookForDetail(e,bookId) {
     e.preventDefault();
-    //TODO : 請補齊未完成的功能
+    //TODO: 請補齊未完成的功能
     $("#book_detail_area").data("kendoWindow").title("書籍明細");
 
 }
@@ -329,12 +329,12 @@ function bindBook(bookId){
     $("#book_name_d").val(book.BookName);
     $("#book_author_d").val(book.BookAuthor);
     $("#book_publisher_d").val(book.BookPublisher);
-    //TODO : 完成尚未完成的程式碼
+    //TODO: 完成尚未完成的程式碼
 }
 
 function showBookLendRecord(e) {
 
-    //TODO : 請補齊未完成的功能
+    //TODO: 請補齊未完成的功能
     var grid = getBooGrid();
     var dataItem=grid.dataItem(e.target.closest("tr"))
     var bookLendRecordData=[];
@@ -349,7 +349,7 @@ function showBookLendRecord(e) {
  * @param {*} area 
  */
 function clear(area) {
-    //TODO : 請補齊未完成的功能
+    //TODO: 請補齊未完成的功能
     $("#book_name_q").val("");
 
 }
@@ -358,7 +358,7 @@ function clear(area) {
  * 設定借閱狀態與借閱人關聯
  */
 function setStatusKeepRelation() { 
-    //TODO : 請補齊借閱人與借閱狀態相關邏輯
+    //TODO: 請補齊借閱人與借閱狀態相關邏輯
     switch (state) {
         case "add"://新增狀態
             $("#book_status_d_col").css("display","none");
