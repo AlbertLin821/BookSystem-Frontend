@@ -214,39 +214,52 @@ function addBook() {
   * @param {} bookId 
   */
 function updateBook(bookId){
-    
-    //TODO:請完成更新書籍的相關功能
-    var book=bookDataFromLocalStorage.find(m=>m.BookId==bookId)
+    var book=bookDataFromLocalStorage.find(m=>m.BookId==bookId);
+  
+    if(!book) {
+        alert("找不到書籍資料");
+        return;
+    }
 
-    book.BookName=$("#book_name_d").val();
-    book.BookClassId=$("#book_class_d").val();
-    book.BookClassName="";
-    book.BookBoughtDate=""
-    book.BookStatusId=""
-    book.BookStatusName=""
-    
-    var bookKeeperId=$("#book_keeper_d").data("kendoDropDownList").value();
-    var bookKeeperCname=
-        bookKeeperId==""?"":memberData.find(m=>m.UserId==bookKeeperId).UserCname;
+    var bookClassId = $("#book_class_d").data("kendoDropDownList").value();
+    var bookClassName = classData.find(m=>m.value==bookClassId).text;
+    var bookStatusId = $("#book_status_d").data("kendoDropDownList").value();
+    var bookStatusName = bookStatusData.find(m=>m.StatusId==bookStatusId).StatusText;
+    var bookKeeperId = $("#book_keeper_d").data("kendoDropDownList").value();
+  
+    // 如果借閱狀態為「可以借出」（A）或「不可借出」（U），強制清空借閱人
+    if(bookStatusId=="A" || bookStatusId=="U"){
+        bookKeeperId = "";
+    }
+  
+    var bookKeeper = bookKeeperId=="" ? null : memberData.find(m=>m.UserId==bookKeeperId);
 
-    book.BookKeeperId=bookKeeperId;
-    book.BookKeeperCname=bookKeeperCname;
-    book.BookKeeperEname="";
+    book.BookName = $("#book_name_d").val();
+    book.BookClassId = bookClassId;
+    book.BookClassName = bookClassName;
+    book.BookBoughtDate = kendo.toString($("#book_bought_date_d").data("kendoDatePicker").value(),"yyyy-MM-dd");
+    book.BookStatusId = bookStatusId;
+    book.BookStatusName = bookStatusName;
+    book.BookKeeperId = bookKeeperId;
+    book.BookKeeperCname = bookKeeper ? bookKeeper.UserCname : "";
+    book.BookKeeperEname = bookKeeper ? bookKeeper.UserEname : "";
+    book.BookAuthor = $("#book_author_d").val();
+    book.BookPublisher = $("#book_publisher_d").val();
+    book.BookNote = $("#book_note_d").val();
 
-    book.BookAuthor="";
-    book.BookPublisher="";
-    book.BookNote="";
+    // 如果借閱狀態為 已借出（B）或已借出(未領)（C），且已選擇借閱人，則新增借閱紀錄
+    if((bookStatusId=="B" || bookStatusId=="C") && bookKeeperId!=""){
+        addBookLendRecord(bookId, bookKeeperId);
+    }
+
+    localStorage.setItem("bookData", JSON.stringify(bookDataFromLocalStorage));
+    console.log("已將更新後的資料寫入 localStorage，目前共有 " + bookDataFromLocalStorage.length + " 筆書籍資料");
 
     var grid=$("#book_grid").data("kendoGrid");
-    grid.dataSource.pushUpdate(book);
-
-    
-    if(bookStatusId=="B" || bookStatusId=="C"){
-        addBookLendRecord();
-    }
-    
+    grid.dataSource.data(bookDataFromLocalStorage);
+    grid.refresh();
+  
     $("#book_detail_area").data("kendoWindow").close();
-
     clear();
  }
 
@@ -302,7 +315,15 @@ function showBookForUpdate(e) {
     var bookId = grid.dataItem(e.target.closest("tr")).BookId;
 
     bindBook(bookId);
-    
+  
+    $("#book_class_d").data("kendoDropDownList").enable(true);
+    $("#book_name_d").prop("disabled", false);
+    $("#book_author_d").prop("disabled", false);
+    $("#book_publisher_d").prop("disabled", false);
+    $("#book_bought_date_d").data("kendoDatePicker").enable(true);
+    $("#book_status_d").data("kendoDropDownList").enable(true);
+    $("#book_note_d").prop("disabled", false);
+  
     setStatusKeepRelation();
     $("#book_detail_area").data("kendoWindow").open();
 }
@@ -314,9 +335,23 @@ function showBookForUpdate(e) {
  */
 function showBookForDetail(e,bookId) {
     e.preventDefault();
-    //TODO: 請補齊未完成的功能
+  
+    state = "";
     $("#book_detail_area").data("kendoWindow").title("書籍明細");
-
+    $("#btn-save").css("display","none");
+  
+    bindBook(bookId);
+  
+    $("#book_class_d").data("kendoDropDownList").enable(false);
+    $("#book_name_d").prop("disabled", true);
+    $("#book_author_d").prop("disabled", true);
+    $("#book_publisher_d").prop("disabled", true);
+    $("#book_bought_date_d").data("kendoDatePicker").enable(false);
+    $("#book_status_d").data("kendoDropDownList").enable(false);
+    $("#book_keeper_d").data("kendoDropDownList").enable(false);
+    $("#book_note_d").prop("disabled", true);
+  
+    $("#book_detail_area").data("kendoWindow").open();
 }
 
 /**
@@ -325,11 +360,33 @@ function showBookForDetail(e,bookId) {
  */
 function bindBook(bookId){
     var book = bookDataFromLocalStorage.find(m => m.BookId == bookId);
+    if(!book) {
+        return;
+    }
+  
     $("#book_id_d").val(bookId);
     $("#book_name_d").val(book.BookName);
     $("#book_author_d").val(book.BookAuthor);
     $("#book_publisher_d").val(book.BookPublisher);
-    //TODO: 完成尚未完成的程式碼
+    $("#book_note_d").val(book.BookNote);
+  
+    $("#book_class_d").data("kendoDropDownList").value(book.BookClassId);
+    onChange(); // 更新圖片
+  
+    if(book.BookBoughtDate){
+        var boughtDate = kendo.parseDate(book.BookBoughtDate, "yyyy-MM-dd");
+        $("#book_bought_date_d").data("kendoDatePicker").value(boughtDate);
+    }
+  
+    if(book.BookStatusId){
+        $("#book_status_d").data("kendoDropDownList").value(book.BookStatusId);
+    }
+  
+    if(book.BookKeeperId){
+        $("#book_keeper_d").data("kendoDropDownList").value(book.BookKeeperId);
+    } else {
+        $("#book_keeper_d").data("kendoDropDownList").value("");
+    }
 }
 
 function showBookLendRecord(e) {
