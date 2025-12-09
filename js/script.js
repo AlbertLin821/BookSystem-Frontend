@@ -39,17 +39,63 @@ $(function () {
         ]
     }).data("kendoWindow").center();
     
+        // 初始化表單驗證器
+        $("#book_detail_area").kendoValidator({
+            rules: {
+                required: function(input) {
+                    // 檢查欄位是否可見，如果不可見則跳過驗證
+                    var isVisible = input.closest("div").is(":visible");
+                    if (!isVisible) {
+                        return true; // 跳過驗證
+                    }
+            
+                    // 圖書類別欄位不驗證
+                    if (input.is("[name='book_class_d']")) {
+                        return true; // 跳過驗證
+                    }
+            
+                    // 處理 Kendo DatePicker（購買日期）
+                    if (input.is("[name='book_bought_date_d']")) {
+                        var datePicker = input.data("kendoDatePicker");
+                        if (datePicker) {
+                            var value = datePicker.value();
+                            var isValid = value !== null && value !== undefined;
+                            // 同步值到原始 input
+                            if (isValid && value) {
+                                input.val(kendo.toString(value, "yyyy-MM-dd"));
+                            }
+                            return isValid;
+                        }
+                        return input.val() !== "";
+                    }
+                    // 處理 textarea
+                    if (input.is("[name='book_note_d']")) {
+                        return input.val() !== "";
+                    }
+                    // 處理一般輸入欄位
+                    return input.val() !== "";
+                }
+            },
+            messages: {
+                required: function(input) {
+                    var message = input.attr("validationMessage");
+                    if (message) {
+                        return message;
+                    }
+                    return "此欄位為必填";
+                }
+            }
+        });
 
-    $("#btn_add_book").click(function (e) {
-        e.preventDefault();
-        state=stateOption.add;
-
-        setStatusKeepRelation(state);
-
-        $("#btn-save").css("display","");        
-        $("#book_detail_area").data("kendoWindow").title("新增書籍");
-        $("#book_detail_area").data("kendoWindow").open();
-    });
+        $("#btn_add_book").click(function (e) {
+            e.preventDefault();
+            state=stateOption.add;
+            clear();
+            setStatusKeepRelation();
+            $("#btn-save").css("display","");  
+            $("#book_detail_area").data("kendoWindow").title("新增書籍");
+            $("#book_detail_area").data("kendoWindow").open();
+        });
 
 
     $("#btn_query").click(function (e) {
@@ -65,21 +111,140 @@ $(function () {
 
     $("#btn-save").click(function (e) {
         e.preventDefault();
+  
+        console.log("存檔按鈕被點擊，目前狀態：", state);
+  
+        // TODO:  Kendo Validator 檢查欄位
+        var validator = $("#book_detail_area").data("kendoValidator");
+  
+        if (!validator) {
+            console.log("驗證器不存在");
+            return;
+        }
+  
+        // 驗證前 同步 Kendo DropDownList 的值到原始 input 元素
+        var bookClassDropdown = $("#book_class_d").data("kendoDropDownList");
+        if (bookClassDropdown) {
+            var bookClassValue = bookClassDropdown.value();
+            console.log("圖書類別 DropDownList 值：", bookClassValue);
+            // 同步原始 input 讓 Validator 能正確驗證
+            $("#book_class_d").val(bookClassValue);
+            console.log("圖書類別 input 值（同步後）：", $("#book_class_d").val());
+        }
+  
+        // 同步購買日期的值
+        var datePicker = $("#book_bought_date_d").data("kendoDatePicker");
+        if (datePicker) {
+            var dateValue = datePicker.value();
+            if (dateValue) {
+                $("#book_bought_date_d").val(kendo.toString(dateValue, "yyyy-MM-dd"));
+            }
+        }
+  
+        // 新增模式下，確保借閱狀態和借閱人欄位有值且不會被驗證
+        if (state === "add") {
+            // 設定預設值
+            $("#book_status_d").data("kendoDropDownList").value("A");
+            $("#book_keeper_d").data("kendoDropDownList").value("");
+            // 同步值到原始 input
+            $("#book_status_d").val("A");
+            $("#book_keeper_d").val("");
+            // 暫時移除 required 屬性，避免驗證
+            $("#book_status_d").removeAttr("required");
+            $("#book_keeper_d").removeAttr("required");
+        }
+  
+        // 先手動驗證所有必填欄位，確保狀態正確
+        var requiredFields = [
+            { name: "book_class_d", label: "圖書類別" },
+            { name: "book_name_d", label: "書名" },
+            { name: "book_author_d", label: "作者" },
+            { name: "book_publisher_d", label: "出版商" },
+            { name: "book_note_d", label: "內容簡介" },
+            { name: "book_bought_date_d", label: "購買日期" }
+        ];
+  
+        console.log("手動驗證各欄位：");
+        var allFieldsValid = true;
+        requiredFields.forEach(function(field) {
+            var input = $("[name='" + field.name + "']");
+            var isValid = validator.validateInput(input);
+            var value = input.val();
+            if (field.name === "book_class_d") {
+                var dropdown = input.data("kendoDropDownList");
+                value = dropdown ? dropdown.value() : value;
+            }
+            console.log("  - " + field.label + ": 驗證=" + (isValid ? "通過" : "失敗") + ", 值=" + value);
+            if (!isValid) {
+                allFieldsValid = false;
+            }
+        });
+  
+        // 新增模式下，清除借閱狀態和借閱人的驗證錯誤
+        if (state === "add") {
+            validator.validateInput($("#book_status_d"));
+            validator.validateInput($("#book_keeper_d"));
+        }
+  
+        // 如果所有必填欄位都通過驗證，則直接繼續執行，不執行整體驗證
+        if (allFieldsValid) {
+            console.log("所有必填欄位驗證通過，跳過整體驗證");
+        } else {
+            // 如果有欄位驗證失敗，執行整體驗證以顯示錯誤訊息
+            var validationResult = validator.validate();
+            console.log("整體驗證結果：", validationResult);
+    
+            if (!validationResult) {
+                console.log("表單驗證失敗");
+                var errors = validator.errors();
+                console.log("驗證錯誤：", errors);
         
-        //TODO: 存檔前請作必填的檢查
-        //低消：使用 if else ==>alert 提示訊息檢查
-        //優  : 使用 kendo validator 檢查
+                // 恢復 required 屬性（如果之前移除了）
+                if (state === "add") {
+                    $("#book_status_d").attr("required", "required");
+                    $("#book_keeper_d").attr("required", "required");
+                }
+        
+                return;
+            }
+        }
+  
+        console.log("表單驗證通過");
+  
+        // 恢復 required 屬性（如果之前移除了）
+        if (state === "add") {
+            $("#book_status_d").attr("required", "required");
+            $("#book_keeper_d").attr("required", "required");
+        }
+  
+        console.log("表單驗證通過");
+  
+        // TODO: 業務邏輯驗證 - 修改模式下，借閱狀態為 已借出 時，借閱人為必填
+        if(state == "update"){
+            var bookStatusId = $("#book_status_d").data("kendoDropDownList").value();
+            var bookKeeperId = $("#book_keeper_d").data("kendoDropDownList").value();
+    
+            if((bookStatusId == "B" || bookStatusId == "C") && (bookKeeperId == "" || bookKeeperId == null)){
+                alert("借閱狀態為「已借出」時，借閱人為必填欄位");
+                return;
+            }
+        }
+  
+        var bookId = $("#book_id_d").val();
+  
         switch (state) {
             case "add":
                 addBook();
+                console.log("書籍新增成功，資料已儲存至 localStorage");
                 break;
             case "update":
-                updateBook('9999');
-            break;
+                updateBook(bookId);
+                console.log("書籍更新成功，資料已儲存至 localStorage");
+                break;
             default:
                 break;
         }
-        
+  
     });
 
     $("#book_grid").kendoGrid({
@@ -172,11 +337,11 @@ function loadBookData() {
 }
 
 function onChange() {
-    //TODO: 請完成遺漏的邏輯
-    if(selectedValue===""){
+    var selectedValue = $("#book_class_d").data("kendoDropDownList").value();
+    if(selectedValue==="" || selectedValue==null){
         $("#book_image_d").attr("src", "image/optional.jpg");
     }else{
-       
+        $("#book_image_d").attr("src", "image/" + selectedValue + ".jpg");
     }
 }
 
@@ -185,27 +350,49 @@ function onChange() {
  * 新增書籍
  */
 function addBook() { 
-
-    //TODO:請完成新增書籍的相關功能
     var grid=$("#book_grid").data("kendoGrid");
+  
+    // 自動產生新的書籍編號 找出現有最大 BookId 加 1
+    var maxBookId = 0;
+    if(bookDataFromLocalStorage.length > 0){
+        maxBookId = Math.max.apply(Math, bookDataFromLocalStorage.map(function(b) { return b.BookId; }));
+    }
+  
+    var bookClassId = $("#book_class_d").data("kendoDropDownList").value();
+    var bookClassName = classData.find(m=>m.value==bookClassId).text;
+  
     var book = {
-        "BookId": 0,
+        "BookId": maxBookId + 1,
         "BookName": $("#book_name_d").val(),
-        "BookClassId": $("#book_class_d").data("kendoDropDownList").value(),
-        "BookClassName": "",
+        "BookClassId": bookClassId,
+        "BookClassName": bookClassName,
         "BookBoughtDate": kendo.toString($("#book_bought_date_d").data("kendoDatePicker").value(),"yyyy-MM-dd"),
         "BookStatusId": "A",
-        "BookStatusName": bookStatusData.find(m=>m.StatusId==defauleBookStatusId).StatusText,
+        "BookStatusName": bookStatusData.find(m=>m.StatusId=="A").StatusText,
         "BookKeeperId": "",
         "BookKeeperCname": "",
         "BookKeeperEname": "",
-        "BookAuthor": "",
-        "BookPublisher": "",
-        "BookNote": ""
+        "BookAuthor": $("#book_author_d").val(),
+        "BookPublisher": $("#book_publisher_d").val(),
+        "BookNote": $("#book_note_d").val()
     }
 
-    //關閉 Window
+    bookDataFromLocalStorage.push(book);
+    localStorage.setItem("bookData", JSON.stringify(bookDataFromLocalStorage));
+    console.log("已將資料寫入 localStorage，目前共有 " + bookDataFromLocalStorage.length + " 筆書籍資料");
+    console.log("新增的書籍資料：", book);
+  
+    // 重新設定 Grid 資料來源並重新整理顯示
+    grid.dataSource.data(bookDataFromLocalStorage);
+    grid.refresh();
+  
+    // 確認 Grid 是否正確顯示
+    console.log("Grid 資料筆數：", grid.dataSource.data().length);
+  
     $("#book_detail_area").data("kendoWindow").close();
+    clear();
+  
+    alert("書籍新增成功！資料已儲存至瀏覽器的 localStorage。\n重新整理頁面後，資料仍會保留。");
  }
 
  /**
