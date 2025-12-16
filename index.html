@@ -35,36 +35,44 @@
               </h2>
               <div id="book_filter_area" class="accordion-collapse collapse">
                 <div class="accordion-body">
-                    
+                    <form id="book_query_form">
                         <div class="row g-3" style="box-sizing: border-box;">
                             <div class="col-3" style="box-sizing: border-box; ;">
                                 <label>書名</label>
-                                <input id="book_name_q" type="text" class="k-textbox" style="width: 100%;" />
+                                <input id="book_name_q" name="book_name_q" type="text" class="k-textbox" style="width: 100%;" />
+                                <span class="k-form-error k-invalid-msg" data-for="book_name_q"></span>
                             </div>
         
                             <div class="col-3" style="box-sizing: border-box; ;">
                                 <label>圖書類別</label>
-                                <select id="book_class_q" style="width: 100%;">
+                                <select id="book_class_q" name="book_class_q" style="width: 100%;">
                                 </select>
+                                <span class="k-form-error k-invalid-msg" data-for="book_class_q"></span>
                             </div>
                             <div class="col-3" style="box-sizing: border-box; ;">
                                 <label>借閱人</label>
-                                
-                                <select id="book_keeper_q" style="width: 100%;">
+                                <select id="book_keeper_q" name="book_keeper_q" style="width: 100%;">
                                 </select>
+                                <span class="k-form-error k-invalid-msg" data-for="book_keeper_q"></span>
                             </div>
                             <div class="col-3" style="box-sizing: border-box; ;">
                                 <label>借閱狀態</label>
-                                <select id="book_status_q" style="width: 100%;">
+                                <select id="book_status_q" name="book_status_q" style="width: 100%;">
                                 </select>
+                                <span class="k-form-error k-invalid-msg" data-for="book_status_q"></span>
                             </div>
                         </div>
                         <div style="margin: 5px;text-align: right;">
-                            <button id="btn_query" class="k-button">查詢</button>
-                            <button id="btn_clear" class="k-button">清除</button>
-                            <button id="btn_add_book" class="k-button k-primary">新增</button>
+                            <button id="btn_query" type="submit" class="k-button">查詢</button>
+                            <button id="btn_clear" type="button" class="k-button">清除</button>
+                            <button id="btn_add_book" type="button" class="k-button k-primary">新增</button>
                         </div>
-                    
+                        <div class="row g-3" style="box-sizing: border-box;">
+                            <div class="col-12">
+                                <span class="k-form-error k-invalid-msg" data-for="query_condition"></span>
+                            </div>
+                        </div>
+                    </form>
                 </div>
               </div>
             </div>
@@ -78,9 +86,8 @@
                 <div class="col-4" style="box-sizing: border-box; ;">
                     <input type="hidden" id="book_id_d">
                     <div class="col">
-                        <label class="required">圖書類別</label>
-                        <select id="book_class_d" name="book_class_d" style="width: 100%;" 
-                            required validationMessage="圖書類別不可空白">
+                        <label>圖書類別</label>
+                        <select id="book_class_d" name="book_class_d" style="width: 100%;">
                         </select>
                     </div>
 
